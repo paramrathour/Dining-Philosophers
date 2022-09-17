@@ -1,0 +1,559 @@
+% Copyright 2004 by Till Tantau <tantau@users.sourceforge.net>.
+%
+% In principle, this file can be redistributed and/or modified under
+% the terms of the GNU Public License, version 2.
+%
+% However, this file is supposed to be a template to be modified
+% for your own needs. For this reason, if you use this file as a
+% template and not specifically distribute it as part of a another
+% package/program, I grant the extra permission to freely copy and
+% modify this file as you see fit and even to delete this copyright
+% notice. 
+
+\documentclass[aspectratio=169, handout, 10pt]{beamer}
+
+% There are many different themes available for Beamer. A comprehensive
+% list with examples is given here:
+% http://deic.uab.es/~iblanes/beamer_gallery/index_by_theme.html
+% You can uncomment the themes below if you would like to use a different
+% one:
+%\usetheme{AnnArbor}
+%\usetheme{Antibes}
+%\usetheme{Bergen}
+%\usetheme{Berkeley}
+%\usetheme{Berlin}
+\usetheme{Boadilla}
+%\usetheme{boxes}
+%\usetheme{CambridgeUS}
+%\usetheme{Copenhagen}
+%\usetheme{Darmstadt}
+%\usetheme{default}
+%\usetheme{Frankfurt}
+%\usetheme{Goettingen}
+%\usetheme{Hannover}
+%\usetheme{Ilmenau}
+%\usetheme{JuanLesPins}
+%\usetheme{Luebeck}
+% \usetheme{Madrid}
+%\usetheme{Malmoe}
+%\usetheme{Marburg}
+%\usetheme{Montpellier}
+%\usetheme{PaloAlto}
+%\usetheme{Pittsburgh}
+%\usetheme{Rochester}
+%\usetheme{Singapore}
+%\usetheme{Szeged}
+%\usetheme{Warsaw}
+
+\title[Dining Philosophers]{Dining Philosophers: A Synchronization Problem}
+% A subtitle is optional and this may be deleted
+\subtitle{CS347 Operating Systems}
+
+% \author{F.~Author\inst{1} \and S.~Another\inst{2}}
+\author[Param]{Rathour Param Jitendrakumar\\190070049}
+% - Give the names in the same order as the appear in the paper.
+% - Use the \inst{?} command only if the authors have different
+%   affiliation.
+
+\institute[IIT Bombay]{Department of Electrical Engineering\\
+Indian Institue of Technology Bombay} % (optional, but mostly needed)
+% {
+%   \inst{1}%
+%   Department of Computer Science\\
+%   University of Somewhere
+%   \and
+%   \inst{2}%
+%   Department of Theoretical Philosophy\\
+%   University of Elsewhere}
+% - Use the \inst command only if there are several affiliations.
+% - Keep it simple, no one is interested in your street address.
+
+\date{Spring 2021-22}
+% - Either use conference name or its abbreviation.
+% - Not really informative to the audience, more for people (including
+%   yourself) who are reading the slides online
+
+\subject{Operating Systems}
+% This is only inserted into the PDF information catalog. Can be left
+% out. 
+
+% If you have a file called "university-logo-filename.xxx", where xxx
+% is a graphic format that can be processed by latex or pdflatex,
+% resp., then you can add a logo as follows:
+
+% \pgfdeclareimage[height=0.5cm]{university-logo}{university-logo-filename}
+% \logo{\pgfuseimage{university-logo}}
+
+% Delete this, if you do not want the table of contents to pop up at
+% the beginning of each subsection:
+% \AtBeginSubsection[]
+% {
+%   \begin{frame}<beamer>{Outline}
+%     \tableofcontents[currentsection,currentsubsection]
+%   \end{frame}
+% }
+\theoremstyle{example}
+\newtheorem{postulate}{Postulate}
+\usepackage{braket}
+% \usepackage{natbib}
+\usepackage{epigraph}
+\usepackage{fancyvrb}
+\usepackage{amsmath,amssymb,amsfonts,mathtools,nccmath}
+\usepackage{algorithmic}
+\usepackage{graphicx}
+\usepackage{textcomp}
+\usepackage{xcolor}
+\usepackage{float}
+% \usepackage{hyperref}
+% \hypersetup{colorlinks, linkcolor=magenta}
+\usepackage{ragged2e}
+% \usepackage{etoolbox}
+% \apptocmd{\frame}{}{\justifying}{} % Allow optional arguments after frame.
+\renewcommand{\raggedright}{\leftskip=0pt \rightskip=0pt plus 0cm}
+\apptocmd{\frame}{}{\justifying}{}
+% \addtobeamertemplate{}{}{\justifying}
+\setbeamersize{text margin left=2em,text margin right=3em}
+% \beamerdefaultoverlayspecification{<+->}
+% \addtobeamertemplate{proof begin}{%
+%     \setbeamercolor{block title}{fg=red!50!black,bg=red!25!white}%
+%     \setbeamercolor{block body}{fg=black, bg=red!10!white}%
+% }{}
+% Let's get started
+\begin{document}
+
+\begin{frame}
+  \titlepage
+  \begin{center}
+      \it When you go to sleep make sure there is someone to wake you up.\\
+      \hfill{(Prof. Mythili Vutukuru)}
+  \end{center}
+%   \epigraph{When you go to sleep make sure there is someone to wake you up.}{Prof. Mythili Vutukuru}
+\end{frame}
+
+\begin{frame}{Outline}
+  \tableofcontents
+  % You might wish to add the option [pausesections]
+\end{frame}
+
+% Section and subsections will appear in the presentation overview
+% and table of contents.
+\section{Problem Formulation}
+\subsection{The Setup}
+\begin{frame}{Problem Formulation}{The Setup}
+  \begin{itemize}
+  \pause\item $N$ philosophers denoted by $P_i$, $i \in [N]\triangleq \{0, . . . , N-1\}$ around a circular table.% facing towards the centre.
+  \pause\item The table contains
+\begin{itemize}
+    \pause\item $N$ plates - a plate in front of each philosopher denoted by $p_i$, $i \in [N]$.
+    \pause\item $N$ forks - in between two consecutive plates denoted by $f_i$, $i \in [N]$. %chopsticks
+    \pause\item a huge bowl of spaghetti in the centre of table.
+\end{itemize}
+\pause\item $P_i$ has $p_i$ in their front and $f_i, f_{(i+1)\%N}$ to their right and left respectively.
+\begin{figure}
+    \centering
+    \includegraphics[width = 0.25\linewidth]{dp.pdf}
+    \caption{Example\footnote{\tiny Downey Allen B. The Little Book of Semaphores} when $N=5$}
+    \label{fig:dp}
+\end{figure}
+  \end{itemize}
+\end{frame}
+\begin{frame}[fragile]\frametitle{Problem Formulation}\framesubtitle{The Philosopher}
+  \begin{itemize}
+%   \pause\item $N$ philosophers denoted by $P_i$, $i \in [N]$
+  \pause\item A philosopher can start eating only after picking up the forks on their left and right.
+  \pause\item Till they start eating, they will be `thinking'.
+  \pause\item Generic Behaviour of a philosopher:
+  \begin{Verbatim}[frame=single]
+while (True){
+    think()
+    pick_up_forks()
+    eat()
+    put_down_forks()
+}
+\end{Verbatim}
+  \end{itemize}
+\end{frame}
+\subsection{The Problem}
+\begin{frame}[fragile]\frametitle{Problem Formulation}\framesubtitle{The Problem}
+  \begin{itemize}
+  \pause\item Write \verb!pick_up_forks! and \verb!put_down_forks! satisfying the following
+  \pause\item  Constraints
+  \begin{itemize}
+      \pause\item A fork can be used by only one philosopher at any instant.
+      \pause\item No deadlock should occur.
+      \pause\item No philosopher should starve forever.
+      \pause\item At least two philosophers can eat at same time.
+  \end{itemize}
+  \pause\item Assumptions
+  \begin{itemize}
+      \pause\item \verb!think! and \verb!eat! are known (possibly unique for each philosophers).
+      \pause\item \verb!eat! has to terminate.
+  \end{itemize}
+  \pause\item The intuition here is that the philosophers represent the threads and forks represent the resources needed for these threads to proceed.
+  \pause\item A complicated problem as a thread can possibly context switch anytime during its execution% of a thread making this problem a bit complicated.
+  \end{itemize}
+\end{frame}
+\begin{frame}[fragile]\frametitle{Problem Formulation}\framesubtitle{The Notation}
+  \begin{itemize}
+\pause\item The right and left philosopher for $i$\textsuperscript{th} philosopher are given by:
+  \begin{Verbatim}[frame=single]
+right_p(i) = (i-1)%N
+left_p(i) = (i+1)%N
+\end{Verbatim}
+\pause\item The right and left fork for $i$\textsuperscript{th} philosopher are given by:
+  \begin{Verbatim}[frame=single]
+right_f(i) = i
+left_f(i) = (i+1)%N
+\end{Verbatim}
+\pause\item We may refer to philosophers as threads
+\pause\item A philosopher $P_0$ successfully completes/finishes when it goes back to thinking. %(\verb!think!)).
+\pause\item A scheduled thread is active when it has run at least once.
+  \end{itemize}
+\end{frame}
+\section{Semaphores -- Focusing on Forks}
+\subsection{Introduction}
+\begin{frame}[fragile]\frametitle{Semaphores}\framesubtitle{Introduction}
+\begin{itemize}
+\pause\item Semaphores are used to achieve synchronization between threads. 
+\pause\item A semaphore is essentially a variable with an underlying counter
+\pause\item The counter value can't be accessed once it is initialised with a suitable value.
+\pause\item For a semaphore variable \verb!s!,
+  \begin{itemize}
+  \pause\item When a thread calls \verb!down(s)!, the counter is decremented and the thread is blocked if the counter value becomes negative.
+  \pause\item When a thread calls \verb!up(s)!, the counter is incremented and any one of blocked threads is woken up (`ready to run' again).
+  \end{itemize}
+\end{itemize}
+\end{frame}
+\subsection{Incorrect Solution}
+\begin{frame}[fragile]\frametitle{Semaphores -- Focusing on Forks}\framesubtitle{Incorrect Solution}{\label{sec:sic}}
+  \begin{itemize}
+  \pause\item Create $N$ semaphore variables, one for each fork denoted by $s_i = 1, i \in [N]$.
+    \pause\item Pseudocode:
+\begin{Verbatim}[frame=single]
+function pick_up_forks(philosopher i){
+    down(s_{right_f(i)})
+    down(s_{left_f(i)})
+}
+\end{Verbatim}
+
+\begin{Verbatim}[frame=single]
+function put_down_forks(philosopher i){
+    up(s_{left_f(i)})
+    up(s_{right_f(i)})
+}
+\end{Verbatim}
+  \end{itemize}
+\end{frame}
+\begin{frame}[fragile]\frametitle{Semaphores -- Incorrect Solution}\framesubtitle{Example -- Deadlock}
+  \begin{example}
+  \begin{itemize}
+  \pause\item Say for $N=3$ case, the schedule is $P_0$, $P_1$, $P_2$ (another example would be $P_0$, $P_2$, $P_1.$)
+  \pause\item $P_0$ will get the right fork $f_0$ by calling \verb!down(s_{right_f(0)}) = down(s_0)! which will make $s_0=0$. Now, suppose $P_0$ gets context switched then $P_1$ begins.
+%   \pause\item Similarly, $P_1$, $P_2$ gets fork $f_1$, $f_2$ respectively (assuming $P_2$ is scheduled before $P_0$).
+  \pause\item $P_1$ will get the right fork $f_1$ by calling \verb!down(s_{right_f(1)}) = down(s_1)! which will make $s_1=0$. Now, suppose $P_1$ gets context switched then assuming $P_2$ begins,
+  \pause\item $P_2$ will get the right fork $f_2$ by calling \verb!down(s_{right_f(2)}) = down(s_2)! which will make $s_2=0$. Now, every $P_i$ will have a single fork $f_i$.
+  \pause\item Now, if any thread $P_i$ executes \verb!down(s_{left_f(i)})!, then for $f_{\text{left}(i)}$, $s_{\text{left}(i)} = -1$. Hence, that thread will be sent to sleep.
+  \pause\item Each thread will try to access their `left fork` and will be sent to eternal sleep. A \emph{deadlock}!
+%   \pause\item To awake them, some thread must give signal which is not possible as all threads are sleeping. A deadlock!
+  \end{itemize}
+  \end{example}
+\end{frame}
+\begin{frame}[fragile]\frametitle{Semaphores}\framesubtitle{Incorrect Solution -- Why Deadlock?}
+  \begin{proof}
+  \begin{itemize}
+  \pause\item Intuitively, suppose each philosopher simultaneously picks up the fork to their right, then all forks are occupied. There are no `available forks' to any philosopher's left.
+  \pause\item Formally, if each thread gets context switched just after executing \\\verb!down(s_{right_f(i)})!, then this will result in $s_i=0, i \in [N]$. 
+  \pause\item Now, if any thread $P_i$ gets scheduled and executes \verb!down(s_{left_f(i)})!, then for that fork's semaphore  $s_{\text{left}(i)} = -1$. Hence, that thread will be sent to sleep.
+  \pause\item Similarly, each thread will try to access their `left fork` and will be sent to sleep.
+  \pause\item To awake them, some thread must give signal which is not possible as all threads are sleeping. A deadlock!
+  \pause\item Note that the above case is possible for any scheduling of threads as we haven't made any assumption on scheduling in the proof.
+  \end{itemize}
+  \end{proof}
+\end{frame}
+\subsection{Correct Solution}
+\begin{frame}[fragile]\frametitle{Semaphores}\framesubtitle{Correct Solution}
+  \begin{itemize}
+  \pause\item In addition to the $N$ semaphore variables, one for each fork $s_i = 1, i \in [N]$,
+  \pause\item create another semaphore variable called $max = N-1$, denoting the maximum number of philosophers allowed to eat at any instant.
+  \pause\item Revised pseudocode:
+\begin{Verbatim}[frame=single]
+function pick_up_forks(philosopher i){
+    down(max)
+    down(s_{right_f(i)})
+    down(s_{left_f(i)})
+}
+\end{Verbatim}
+\begin{Verbatim}[frame=single]
+function put_down_forks(philosopher i){
+    up(s_{left_f(i)})
+    up(s_{right_f(i)})
+    up(max)
+}
+\end{Verbatim}
+  \end{itemize}
+\end{frame}
+\begin{frame}[fragile]\frametitle{Semaphores -- Correct Solution}\framesubtitle{Example 1}
+  \begin{example}
+  \begin{itemize}
+  \pause\item Say for $N=3$ case, the schedule is $P_0$, $P_1$, $P_2$
+  \pause\item Let's assume that no context switches can occur during the execution of \verb!pick_up_forks! and \verb!put_down_forks! (unless it sleeps due to semaphore).
+  \pause\item $P_0$ will get both it's `right and left fork' ($f_0$ and $f_1$) and $P_0$ will start eating.
+  \pause\item Now, one of the two things can happen:
+  \begin{itemize}
+      \item $P_0$ successfully completes everything 
+      \item $P_0$ gets context switched out before it can put down its both forks.
+  \end{itemize}
+%   \pause\item Now, either $P_0$ successfully completes everything (and goes back to thinking (\verb!think!)) or it gets context switched out before it can put down its both forks.
+  \end{itemize}
+  \end{example}
+\end{frame}
+\begin{frame}[fragile]\frametitle{Semaphores -- Correct Solution}\framesubtitle{Example 1}
+  \begin{example}[continued]
+  \begin{itemize}
+  \pause\item In the first case, $P_1$ will get both it's `right and left fork' and it will start eating using $f_1$ and $f_2$, whereas in the second case $P_1$ will only be able to get one fork ($f_2$) and will go to sleep.
+  \pause\item $P_0$ will complete eating and thus its job at sometime due to assumption that \verb!eat! has to terminate. So, forks $f_0$ and $f_1$ will be available later for other threads.
+  \pause\item Even in the 2\textsuperscript{nd} case after completion of $P_0$, $P_1$ will wake up and start eating using $f_1$ and $f_2$. %we are left with two threads and three forks.
+  \pause\item Hence, $P_2$ will get a fork $f_0$ and will go to sleep waiting for $P_1$ to complete.
+  \pause\item Once $P_1$ completes eventually, $P_2$ will be woken up and it will also get completed.
+  \end{itemize}
+  \end{example}
+\end{frame}
+\begin{frame}[fragile]\frametitle{Semaphores -- Correct Solution}\framesubtitle{Example 2}
+  \begin{example}
+  \begin{itemize}
+  \pause\item Say for $N=3$ case, the schedule is $P_0$, $P_1$, $P_2$
+  \pause\item If any thread is able to pick up both forks, it will eventually finish and the analysis will be similar to Example 1. 
+  \end{itemize}
+  \end{example}
+\end{frame}
+\begin{frame}[fragile]\frametitle{Semaphores -- Correct Solution}\framesubtitle{Example 2}
+  \begin{example}[continued]
+  \begin{itemize}
+  \pause\item So let's try the worst case, when each thread gets context switched just after picking up right fork, now the $max$ semaphore comes into picture.
+  \pause\item $P_0$ and $P_1$ will get their right fork $f_0$, $f_1$ respectively.
+  \pause\item Only two of three threads can be active at a time. As both $P_0$ and $P_1$ are yet not completed, When $P_2$ tries to pick up forks, it is sent to sleep as $max$ becomes $-1$. 
+  \pause\item So, $P_0$ and $P_1$, will be able to pick up atleast one fork i.e. the uncommon forks.
+  \pause\item Also, one of them will surely pick up the common fork between them $f_1$. So that thread will start eating.
+  \pause\item Eventually, it will finish and now the other thread will pick up $f_1$ and start eating .
+  \pause\item Now, $P_2$ will be woken up and once the older thread finishes, $P_2$ will start eating.%and eventually finish.
+  \end{itemize}
+  \end{example}
+\end{frame}
+\begin{frame}[fragile]\frametitle{Semaphores -- Correct Solution}%\framesubtitle{Proof}
+  \begin{proof}
+  \begin{itemize}
+  \pause\item WLOG say initially $P_i$ is scheduled earlier than $P_j$ for all $j > i$ where,  $i, j \in [N]$. % for $N = 5$ case
+  \pause\item If we are able to show that any thread is able to pick up both forks, then it will eventually finish and now we will be left with same forks but one less thread.
+  \pause\item Due to $max$, at most $N-1$ threads have begun but there are $N$ forks. So, by pigeonhole principle one thread (say $P_i$) will get two forks which will be done by \verb!pick_up_forks!.
+  \pause\item Semaphore variables, ensure that multiple threads can’t access same fork at a time.
+  \end{itemize}
+\end{proof}
+\end{frame}
+\begin{frame}[fragile]\frametitle{Semaphores -- Correct Solution}%\framesubtitle{Proof}
+  \begin{proof}[Proof (continued)]
+  \begin{itemize}
+  \pause\item So eventually $P_i$ will start eating and finish eating.
+  \pause\item Then, $P_i$ will execute \verb!put_down_forks! and will free its forks for the neighbours.
+  \pause\item So eventually $P_i$ will finish and we will be left with one less thread.
+  \pause\item If one thread was able to finish when a total of $k$ threads were active, then one thread can definitely finish when a total of $k-1$ threads were active as we can always add a thread which does nothing.%with at most $i$ active threads
+  \pause\item So, we have recursively shown that all threads will finish.
+  \end{itemize}
+\end{proof}
+\end{frame}
+\section{Condition Variables -- Focusing on Philosophers}
+\subsection{Introduction}
+\begin{frame}[fragile]\frametitle{Condition Variables}\framesubtitle{Introduction}
+\begin{itemize}
+\pause\item Condition variables are also used to achieve synchronization between threads.
+\pause\item They communicate between threads when certain conditions becomes true.
+\pause\item For a condition variable \verb!cv!,
+  \begin{itemize}
+  \pause\item When a thread calls \verb!wait(cv)!, it is added to a list of waiting threads for \verb!cv! and is blocked. This list is maintained for every condition variable.
+  \pause\item When a thread calls \verb!signal(cv)!, any one of blocked threads is woken up (`ready to run' again).\\There is no immediate context switch, it will be scheduled later.
+  \end{itemize}
+\end{itemize}
+\end{frame}
+\subsection{Incorrect Solution}
+\begin{frame}[fragile]\frametitle{Condition Variables -- Focusing on Philosophers}\framesubtitle{Incorrect Solution}
+  \small\begin{itemize}
+  \pause\item Create $N$ condition variables, one for each philosopher denoted by $c_i, i \in [N]$.
+  \pause\item Create $N$ state variables, one for each philosopher denoted by $x_i = T$, where $i \in [N]$ and $x_i \in \{E,T\}$ denoting whether the philosopher is $E$ating or $T$hinking.
+  \pause\item Pseudocode:
+\begin{Verbatim}[frame=single]
+function pick_up_forks(philosopher i){
+    while (s_{right_p(i)} = E OR s_{left_p(i)} = E)
+        wait(c_i)
+    s_i = E
+}
+\end{Verbatim}
+\begin{Verbatim}[frame=single]
+function put_down_forks(philosopher i){
+    s_i = T
+    if (s_{right_p(right_p(i)} = T)
+        signal(c_{right_p(i)}
+    if (s_{left_p(left_p(i)} = T)
+        signal(c_{left_p(i)}
+}
+\end{Verbatim}
+  \end{itemize}
+\end{frame}
+\begin{frame}[fragile]\frametitle{Condition Variables -- Incorrect Solution}\framesubtitle{Example 1 -- Deadlock}
+  \begin{example}
+  \begin{itemize}
+  \pause\item Say for $N=3$ case, the schedule is $P_0$, $P_1$, $P_2$
+  \pause\item For $P_0$, both its `right and left neighbour' ($P_2$ and $P_1$) are thinking. So, $P_0$ exits while loop and changes its state to eating.
+  \pause\item Now when $P_1$ \verb!pick_up_forks! is executed, the while loop condition fails as $P_0$ is still eating.
+  \pause\item Suppose, $P_1$ is context switched just before it can go to sleep. Also, same happens with $P_2$.
+  \pause\item Now when $P_0$ completes eating it will execute \verb!put_down_forks!, which changes its state back to thinking and sends the signal to wake up $P_1$ and $P_2$ using $c_1$ and $c_2$ respectively.
+  \pause\item Now, when $P_1$ and $P_2$ will come back they will execute the wait statement ignorant of the fact that $P_0$ is already completed
+  \pause\item So both $P_1$ and $P_2$, will go to eternal sleep, called a \emph{missed wakeup} problem and a deadlock!
+  \end{itemize}
+  \end{example}
+\end{frame}
+\begin{frame}[fragile]\frametitle{Condition Variables -- Incorrect Solution}\framesubtitle{Example 2 -- Race Condition}
+  \begin{example}
+  \begin{itemize}
+  \pause\item Say for $N=3$ case, the schedule is $P_0$, $P_1$, $P_2$
+  \pause\item For $P_0$, both its `right and left philosopher' ($P_2$ and $P_1$) are thinking. So, $P_0$ exits while loop.
+  \pause\item Now, suppose $P_0$ gets context switched before $P_0$ changes its state to eating.
+  \pause\item For $P_1$, both its `right and left neighbour' ($P_0$ and $P_2$) are thinking. So, $P_1$ exits while loop and changes its state to eating.
+  \pause\item Now even if $P_2$ is scheduled next, it will remain in while loop and go to sleep as $P_1$ is eating. So $P_0$ comes back and changes its state to eating.
+%   \pause\item Then for $P_1$, both its `right and left philosopher' ($P_0$ and $P_2$) are still thinking. So, $P_1$ also exits while loop.
+  \pause\item The above will imply two neighbouring philosophers are eating simultaneously by using a common fork which should not happen, a \emph{race condition}!
+  \end{itemize}
+  \end{example}
+\end{frame}
+\subsection{Correct Solution}
+\begin{frame}[fragile]\frametitle{Condition Variables}\framesubtitle{Correct Solution}
+  \small\begin{itemize}
+  \pause\item Pseudocode:
+\begin{Verbatim}[frame=single]
+function pick_up_forks(philosopher i){
+    lock(mutex)
+    while (s_{right_p(i)} = E OR s_{left_p(i)} = E)
+        wait(c_i, mutex)
+    s_i = E
+    unlock(mutex)
+}
+\end{Verbatim}
+\begin{Verbatim}[frame=single]
+function put_down_forks(philosopher i){
+    lock(mutex)
+    s_i = T
+    if (s_{right_p(right_p(i)} = T)
+        signal(c_{right_p(i)}
+    if (s_{left_p(left_p(i)} = T)
+        signal(c_{left_p(i)}
+    unlock(mutex)
+}
+\end{Verbatim}
+  \end{itemize}
+\end{frame}
+\begin{frame}[fragile]\frametitle{Condition Variables -- Correct Solution}\framesubtitle{Example 1}
+  \begin{example}
+  \begin{itemize}
+  \pause\item Say for $N=3$ case, the schedule is $P_0$, $P_1$, $P_2$
+  \pause\item $P_0$ first acquires the lock, then as both its `right and left neighbour' ($P_2$ and $P_1$) are thinking, $P_0$ exits while loop and changes its state to eating and releases the lock.
+  \pause\item Now when $P_1$ \verb!pick_up_forks! is executed it acquires the lock but the while loop condition fails as $P_0$ is still eating.
+  %So $P_1$ is sent to wait and the lock is released only after ensuring that list of waiting processes contains $P_1$. Then $P_1$ goes to sleep. Same happens with P2.
+  \pause\item Suppose, $P_1$ is context switched just before it can go to sleep. Then as $P_1$ has not yet released the lock, $P_0$, $P_2$ will keep waiting for \verb!put_down_forks! and \verb!pick_up_forks! respectively.
+  \pause\item The lock will be released only when $P_1$ comes back and executes \verb!wait!. The lock is released only after ensuring that list of waiting processes contains $P_1$. Then $P_1$ goes to sleep.
+  \pause\item If $P_2$ is scheduled earlier than $P_0$, then it will go to sleep eventually (directly or like in $P_1$).
+  \end{itemize}
+  \end{example}
+\end{frame}
+\begin{frame}[fragile]\frametitle{Condition Variables -- Correct Solution}\framesubtitle{Example 1}
+  \begin{example}[continued]
+  \begin{itemize}
+  \pause\item When $P_0$ completes eating it will execute \verb!put_down_forks! and acquire the lock then change its state back to thinking and signal $P_1$ and $P_2$ using $c_1$ and $c_2$ respectively.
+  \pause\item Now, whoever among $P_1$ and $P_2$ will come back first (say $P_1$) will reacquire lock and will release the lock only after changing its state and then it can start eating.%will go out of the while loop, start eating and eventually finish.
+  \pause\item Even if there are more random context switches $P_1$ will start eating first as $P_2$ will have to wait till the $P_1$ state changes back to thinking. So, $P_1$ will eventually finish.
+  \pause\item Then the last thread will do the formality.
+  \end{itemize}
+  \end{example}
+\end{frame}
+\begin{frame}[fragile]\frametitle{Condition Variables -- Correct Solution}\framesubtitle{Example 2}
+  \begin{example}
+  \begin{itemize}
+  \pause\item Say for $N=3$ case, the schedule is $P_0$, $P_1$, $P_2$
+  \pause\item $P_0$ executes \verb!pick_up_forks! and first acquires the lock, as both its `right and left philosopher' ($P_2$ and $P_1$) are thinking. So, $P_0$ exits while loop.
+  \pause\item Now, suppose $P_0$ gets context switched before $P_0$ changes its state to eating.
+  \pause\item As $P_0$ still hasn't released the lock, whichever thread is scheduled next (say $P_1$), it can't acquire the lock in \verb!pick_up_forks! and will be put to sleep. 
+  \pause\item If $P_2$ is scheduled earlier than $P_0$, then it will go to sleep eventually (directly or like in $P_1$).
+  \pause\item When $P_0$ comes back, it will change its state and release the lock and signal any one of neighbours (say $P_1$) to wake up. Also, $P_0$ can now start eating.
+  \end{itemize}
+  \end{example}
+\end{frame}
+\begin{frame}[fragile]\frametitle{Condition Variables -- Correct Solution}\framesubtitle{Example 2}
+  \begin{example}[continued]
+  \begin{itemize}
+  \pause\item Now, $P_1$ will acquire lock but it will be put to sleep as $P_0$'s state is eating. The lock is released only after ensuring that list of waiting processes contains $P_1$. Then $P_1$ goes to sleep.%will go out of the while loop, start eating and eventually finish.The lock will be released only when $P_1$ comes back and executes \verb!wait!. The lock is released only after ensuring that list of waiting processes contains $P_1$. Then $P_1$ goes to sleep.
+  \pause\item When $P_0$ completes eating it will execute \verb!put_down_forks! and acquire the lock then change its state back to thinking and signal $P_1$ and $P_2$ using $c_1$ and $c_2$ respectively.
+  \pause\item Now, whoever among $P_1$ and $P_2$ will come back first (say $P_1$) will reacquire lock and will release the lock only after changing its state and then it can start eating.%will go out of the while loop, start eating and eventually finish.
+  \pause\item Even if there are more random context switches $P_1$ will start eating first as $P_2$ will have to wait till the $P_1$ state changes back to thinking. So, $P_1$ will eventually finish.
+  \pause\item Then the last thread will do the formality.
+  \end{itemize}
+  \end{example}
+\end{frame}
+\begin{frame}[fragile]\frametitle{Condition Variables -- Correct Solution}%\framesubtitle{Proof}
+  The proof's structure is similar to the proof for Semaphores
+  \begin{proof}
+  \begin{itemize}
+  \pause\item WLOG say initially $P_i$ is scheduled earlier than $P_j$ for all $j > i$ where,  $i, j \in [N]$. % for $N = 5$ case
+  \pause\item If we are able to show that any thread is able to pick up both forks, then it will eventually finish and now we will be left with same forks but one less thread.
+  \pause\item The condition variables are set up in such a way that either the thread will guaranteedly pick up both forks (say $P_i$) or it can't pick any.
+  \pause\item Now once $P_i$ \verb!pick_up_forks! starts execution, $P_i$ will acquire a lock. So, even in the case of context switching its neighbours simply can't acquire lock in \verb!pick_up_forks! until $P_i$ completes \verb!pick_up_forks! 
+  \pause\item Intuitively, we can be sure that the state changes only when both forks are available. Hence, multiple threads can't access same fork at a time.
+  \end{itemize}
+\end{proof}
+\end{frame}
+\begin{frame}[fragile]\frametitle{Condition Variables -- Correct Solution}%\framesubtitle{Proof}
+  \begin{proof}[Proof (continued)]
+  \begin{itemize}
+  \pause\item So eventually $P_i$ will start eating and finish eating.
+  \pause\item $P_i$ will execute \verb!put_down_forks! and change its state allowing its neighbours to get forks.
+  \pause\item If one thread was able to finish when a total of $k$ threads were active, then one thread can definitely finish when a total of $k-1$ threads were active since we can always add a thread which does nothing.%with at most $i$ active threads
+  \pause\item So, we have recursively shown that all threads will finish.
+  \end{itemize}
+\end{proof}
+\end{frame}
+\section{A Fun Challenge}
+\begin{frame}[fragile]\frametitle{A Fun Challenge}%\framesubtitle{Proof}
+  \begin{itemize}
+  \pause\item Deadlock is impossible when there is at least one right handed and at least one left handed philosopher. Can you prove it?
+  \pause\item That is, just ensure in \ref{sec:sic} that $x$ philosophers start with right hand and $y$ philosophers start with left hand, where $x,y > 0$.
+  \end{itemize}
+\end{frame}
+% All of the following is optional and typically not needed. 
+\appendix
+\section{References}
+% \begin{frame}[allowframebreaks]
+\begin{frame}
+  \frametitle<presentation>{References}
+%   \bibliographystyle{plainnat}    
+\bibliographystyle{plainurl}
+  \nocite{*}
+  {\bibliography{references}}
+%   \begin{thebibliography}{10}
+    
+%   \beamertemplatebookbibitems
+%   % Start with overview books.
+
+%   \bibitem{Author1990}
+%     A.~Author.
+%     \newblock {\em Handbook of Everything}.
+%     \newblock Some Press, 1990.
+ 
+    
+%   \beamertemplatearticlebibitems
+%   % Followed by interesting articles. Keep the list short. 
+
+%   \bibitem{Someone2000}
+%     S.~Someone.
+%     \newblock On this and that.
+%     \newblock {\em Journal of This and That}, 2(1):50--100,
+%     2000.
+%   \end{thebibliography}
+\end{frame}
+
+\end{document}
