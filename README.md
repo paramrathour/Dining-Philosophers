@@ -9,7 +9,7 @@ The dining philosophers problem is an example problem often used in concurrent a
 
 **The slides without pauses can be viewed** [here](DP%20without%20pauses.pdf).
 
-**The implementation in c can be viewed** [here](/implementation).
+**The C implementation can be viewed** [here](/implementation).
 
 TeX-nical Details
 -----------------
