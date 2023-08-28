@@ -3,6 +3,8 @@
 Introduction
 ------------
 
+![](Dining%20Philosophers.svg)
+
 The dining philosophers problem is an example problem often used in concurrent algorithm design to illustrate synchronization issues and techniques for resolving them. Here, I present my solutions (with proofs) to this problem.
 
 **The slides with pauses can be viewed** [here](/DP%20with%20pauses.pdf).
